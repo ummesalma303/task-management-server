@@ -67,24 +67,76 @@ async function run() {
       res.send(result)
     })
 // put tasks
-    app.put("/reorder",async (req,res)=>{
-      const {reorderedTaskIds} = req.body
-      console.log('--------',reorderedTaskIds)
-      const ids = reorderedTaskIds.map((id,i) =>({
-        updateMany: {
-          filter: { _id: new ObjectId(id) },
-          update: { $set: { order: i } },
-        },
-      }))
-     
-      console.log(ids)
-     
-      const result = await taskCollection.bulkWrite(ids);
-      console.log(result)
-      res.send(result)
-    })
+    // app.put("/reorder",async (req,res)=>{
+    //   const { reorderedTasks} = req.body
+    //   console.log('--------', reorderedTasks)
+    //   const ids = reorderedTasks.map(task=>task._id)
+    //   // const filter = {_id:new ObjectId(ids)}
+    //   const filter = { _id: { $in: ids } };
+    //   console.log('---74',ids)
+    //   console.log('---76',filter)
+    //   const updateDoc = {
+    //     $set: { tasks: reorderedTasks } // Assuming you want to replace the entire tasks collection
+    //   };
+    //   const res = taskCollection.updateMany(filter,updateDoc)
+    //   res.send( reorderedTasks)
+    // })
+
+    app.put("/reorder", async (req, res) => {
+      const { reorderedTasks } = req.body;
+    
+      console.log('--------', reorderedTasks);
+    
+      const ids = reorderedTasks.map(task => task._id);
+    
+      const filter = { _id: { $in: ids } }; // Use $in operator to match multiple IDs
+    
+      console.log('---74', ids);
+    
+      const updateDoc = {
+        $set: { tasks: reorderedTasks } // Assuming you want to replace the entire tasks collection
+      };
+    
+      try {
+        const result = await taskCollection.updateMany(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.error('Error updating tasks:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    });
 
 
+
+
+    
+    // app.put("/reorder", async (req, res) => {
+    //   const { reorderedTasks } = req.body; // Reordered tasks with ids and their new order
+    //   console.log('--------', reorderedTasks);
+    
+    //   // Prepare the update operations
+    //   const updateOperations = reorderedTasks.map((task, i) => ({
+    //     updateOne: {
+    //       filter: { _id: new ObjectId(task._id) },
+    //       update: { $set: { order: i } },  // Set the new order index
+    //     }
+    //   }));
+    
+    //   console.log(updateOperations);  // For debugging
+    
+    //   try {
+    //     // Execute all update operations in bulk
+    //     const result = await taskCollection.bulkWrite(updateOperations);
+    //     console.log(result);
+    
+    //     // Return the result of the bulkWrite operation
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error(error);
+    //     res.status(500).send({ success: false, message: 'Failed to update tasks order' });
+    //   }
+    // });
+    
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

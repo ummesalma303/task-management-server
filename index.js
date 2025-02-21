@@ -12,7 +12,7 @@ app.use(cors());
 //
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ot76b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 // console.log(uri)
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -55,7 +55,7 @@ async function run() {
     app.get("/tasks",async (req,res)=>{
       // const task = req.body
       const result = await taskCollection.find().toArray();
-      console.log(result)
+      // console.log(result)
       res.send(result)
     })
 // get tasks
@@ -68,21 +68,23 @@ async function run() {
     })
 // put tasks
     app.put("/reorder",async (req,res)=>{
-      // const task = req.params.id
-      // console.log(id)
-      const reorderTask = req.body
-      console.log(reorderTask)
-      const filter = { _id: reorderTask._id };
-      const updateDoc = {
-        $set: {
-          reorderTask
-        }
-
-      }
-      const result = await taskCollection.updateOne(filter,updateDoc);
+      const {reorderedTaskIds} = req.body
+      console.log('--------',reorderedTaskIds)
+      const ids = reorderedTaskIds.map((id,i) =>({
+        updateMany: {
+          filter: { _id: new ObjectId(id) },
+          update: { $set: { order: i } },
+        },
+      }))
+     
+      console.log(ids)
+     
+      const result = await taskCollection.bulkWrite(ids);
       console.log(result)
       res.send(result)
     })
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

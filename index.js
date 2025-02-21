@@ -44,10 +44,42 @@ async function run() {
       console.log(result)
       res.send(result)
     })
-// post user
+// post tasks
     app.post("/tasks",async (req,res)=>{
       const task = req.body
       const result = await taskCollection.insertOne(task);
+      console.log(result)
+      res.send(result)
+    })
+// get tasks
+    app.get("/tasks",async (req,res)=>{
+      // const task = req.body
+      const result = await taskCollection.find().toArray();
+      console.log(result)
+      res.send(result)
+    })
+// get tasks
+    app.get("/tasks",async (req,res)=>{
+      // const task = req.body
+      const email = req.params.email
+      const result = await taskCollection.findOne(email);
+      // console.log(result)
+      res.send(result)
+    })
+// put tasks
+    app.put("/reorder",async (req,res)=>{
+      // const task = req.params.id
+      // console.log(id)
+      const reorderTask = req.body
+      console.log(reorderTask)
+      const filter = { _id: reorderTask._id };
+      const updateDoc = {
+        $set: {
+          reorderTask
+        }
+
+      }
+      const result = await taskCollection.updateOne(filter,updateDoc);
       console.log(result)
       res.send(result)
     })

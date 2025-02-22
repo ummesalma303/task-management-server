@@ -29,9 +29,9 @@ async function run() {
     const taskCollection = client.db("TaskManager").collection("tasks");
     const userCollection = client.db("TaskManager").collection("users");
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
 
@@ -48,9 +48,23 @@ async function run() {
     app.post("/tasks",async (req,res)=>{
       const task = req.body
       const result = await taskCollection.insertOne(task);
-      console.log(result)
+
+      const filter = {_id: new ObjectId(result.insertedId)}
+      const updateDoc = {
+        // count
+        $inc:{order:1}
+      }
+      const r = await taskCollection.updateOne(filter,updateDoc);
+      console.log('-------58',result)
+      console.log('-----59', r)
       res.send(result)
     })
+
+
+
+    
+
+
 // get tasks
     app.get("/tasks",async (req,res)=>{
       // const task = req.body
@@ -66,91 +80,6 @@ async function run() {
       // console.log(result)
       res.send(result)
     })
-// put tasks
-    // app.put("/reorder",async (req,res)=>{
-    //   const { reorderedTasks} = req.body
-    //   console.log('--------', reorderedTasks)
-    //   const ids = reorderedTasks.map(task=>task._id)
-    //   // const filter = {_id:new ObjectId(ids)}
-    //   const filter = { _id: { $in: ids } };
-    //   console.log('---74',ids)
-    //   console.log('---76',filter)
-    //   const updateDoc = {
-    //     $set: { tasks: reorderedTasks } // Assuming you want to replace the entire tasks collection
-    //   };
-    //   const res = taskCollection.updateMany(filter,updateDoc)
-    //   res.send( reorderedTasks)
-    // })
-
-    // app.put("/reorder", async (req, res) => {
-    //   const { reorderedTasks } = req.body;
-    
-    //   console.log('--------', reorderedTasks);
-    
-    //   const ids = reorderedTasks.map(task => task._id);
-    // // console.log(ids)
-    //   const filter = { _id: { $in: reorderedTasks.map(task => new ObjectId(task._id)) } }; // Use $in operator to match multiple IDs
-    
-    //   console.log('---74', ids);
-    
-    //   const updateDoc = {
-    //     $set: { tasks: reorderedTasks } // Assuming you want to replace the entire tasks collection
-    //   };
-    
-    //   try {
-    //     const result = await taskCollection.updateMany(filter, updateDoc);
-    //     res.send(result);
-    //   } catch (error) {
-    //     // console.error('Error updating tasks:', error);
-    //     res.status(500).send('Internal Server Error');
-    //   }
-    // });
-
-
-    // app.put("/reorder", async (req, res) => {
-    //   const { reorderedTasks } = req.body; 
-    //   console.log('--------', reorderedTasks);
-    //   const ids = reorderedTasks.map(task => task._id);
-    //   const filter = { _id: { $in: reorderedTasks.map(task => new ObjectId(task._id)) } }; // Use $in operator to match multiple IDs
-    
-    //   console.log('---74', ids);
-    
-    //   const updateDoc = {
-    //     $set: { tasks: reorderedTasks } // Assuming you want to replace the entire tasks collection
-    //   };
-    
-    //   try {
-    //     const result = await taskCollection.updateMany(filter, updateDoc);
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error('Error updating tasks:', error);
-    //     res.status(500).send('Internal Server Error');
-    //   }
-    // });
-
-    // app.put("/reorder", async (req, res) => {
-    //   const { reorderedTasks, parentId } = req.body; // Parent task collection ID
-    
-    //   try {
-    //     const updatedTasks = reorderedTasks.map(task => ({
-    //       _id: new ObjectId(task._id),
-    //       title: task.title,
-    //       description: task.description,
-    //       order: task.order, // Add order field for sorting
-    //     }));
-    
-    //     const result = await taskCollection.updateOne(
-    //       { _id: new ObjectId(parentId) }, // Find the parent document
-    //       { $set: { tasks: updatedTasks } } // Update only the tasks array
-    //     );
-    
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error("Error updating tasks:", error);
-    //     res.status(500).send("Internal Server Error");
-    //   }
-    // });
-
 
     // app.put("/reorder", async (req, res) => {
     //   const { reorderedTasks, parentId } = req.body; // Parent task collection ID
@@ -201,34 +130,24 @@ async function run() {
     })
 
 
-    
-    // app.put("/reorder", async (req, res) => {
-    //   const { reorderedTasks } = req.body; // Reordered tasks with ids and their new order
-    //   console.log('--------', reorderedTasks);
-    
-    //   // Prepare the update operations
-    //   const updateOperations = reorderedTasks.map((task, i) => ({
-    //     updateOne: {
-    //       filter: { _id: new ObjectId(task._id) },
-    //       update: { $set: { order: i } },  // Set the new order index
-    //     }
-    //   }));
-    
-    //   console.log(updateOperations);  // For debugging
-    
-    //   try {
-    //     // Execute all update operations in bulk
-    //     const result = await taskCollection.bulkWrite(updateOperations);
-    //     console.log(result);
-    
-    //     // Return the result of the bulkWrite operation
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error(error);
-    //     res.status(500).send({ success: false, message: 'Failed to update tasks order' });
-    //   }
-    // });
-    
+   // Example of reordering task
+app.put('/reorder', async (req, res) => {
+  try {
+    const { taskId, newOrder, category } = req.body;
+    const updatedTask = await taskCollection.updateOne(
+      { _id: taskId, category: category },
+      { $set: { order: newOrder } }
+    );
+    res.status(200).json(updatedTask);
+    res.send(updatedTask)
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to reorder task', error });
+  }
+});
+
+  
+
+  
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();

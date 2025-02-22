@@ -108,12 +108,9 @@ async function run() {
 
 
     // app.put("/reorder", async (req, res) => {
-    //   const { reorderedTasks } = req.body;
-    
+    //   const { reorderedTasks } = req.body; 
     //   console.log('--------', reorderedTasks);
-    
     //   const ids = reorderedTasks.map(task => task._id);
-    
     //   const filter = { _id: { $in: reorderedTasks.map(task => new ObjectId(task._id)) } }; // Use $in operator to match multiple IDs
     
     //   console.log('---74', ids);
@@ -153,34 +150,53 @@ async function run() {
     //     res.status(500).send("Internal Server Error");
     //   }
     // });
-    app.put("/reorder", async (req, res) => {
-      const { reorderedTasks, parentId } = req.body; // Parent task collection ID
+
+
+    // app.put("/reorder", async (req, res) => {
+    //   const { reorderedTasks, parentId } = req.body; // Parent task collection ID
     
-      try {
-        const updatedTasks = reorderedTasks.map(task => ({
-          _id: new ObjectId(task._id),
-          title: task.title,
-          description: task.description,
-          order: task.order, // Add order field for sorting
-        }));
+    //   try {
+    //     const updatedTasks = reorderedTasks.map(task => ({
+    //       _id: new ObjectId(task._id),
+    //       title: task.title,
+    //       description: task.description,
+    //       order: task.order, // Add order field for sorting
+    //     }));
     
-        const result = await taskCollection.updateOne(
-          { _id: new ObjectId(parentId) }, // Find the parent document
-          { $set: { tasks: updatedTasks } } // Update only the tasks array
-        );
+    //     const result = await taskCollection.updateOne(
+    //       { _id: new ObjectId(parentId) }, // Find the parent document
+    //       { $set: { tasks: updatedTasks } } // Update only the tasks array
+    //     );
     
-        res.send(result);
-      } catch (error) {
-        console.error("Error updating tasks:", error);
-        res.status(500).send("Internal Server Error");
-      }
-    });
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error("Error updating tasks:", error);
+    //     res.status(500).send("Internal Server Error");
+    //   }
+    // });
     
     app.delete('/delTasks/:id',async(req,res)=>{
       const id = req.params.id
       console.log('-------------`8`',id)
       const filter = {_id: new ObjectId(id)}
       const result = await taskCollection.deleteOne(filter)
+      res.send(result)
+    })
+
+    app.patch('/updateTasks/:id',async(req,res)=>{
+      const id = req.params.id
+      const task = req.body
+      console.log('-------------`8`',id)
+      const filter = {_id: new ObjectId(id)}
+      const updateDoc = {
+        $set:{
+          title: task.title,
+          category: task.category,
+          Description: task.Description,
+          category: task.category,
+        }
+      }
+      const result = await taskCollection.updateOne(filter,updateDoc)
       res.send(result)
     })
 
